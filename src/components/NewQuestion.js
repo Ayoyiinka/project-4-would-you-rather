@@ -1,102 +1,117 @@
-import React, { Component, Fragment } from 'react'
-import { connect } from 'react-redux'
-import { Redirect } from 'react-router'
-import Nav from './Nav'
-import { addQuestion } from '../actions/questions'
-import '../css/NewQuestion.css'
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import {handleAddQuestion} from '../actions/shared';
+import {Redirect} from 'react-router-dom';
 
 class NewQuestion extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      optionOne: '',
-      optionTwo: '',
-      redirectToNewPage: false,
+
+    state = {
+        optionOneText: '',
+        optionTwoText: '',
+        toDashboard: false,
+        hasSubmitted: false
+    };
+
+    handleOptionOneTextChange = (e) => {
+        const text = e.target.value;
+
+        this.setState({
+            optionOneText: text
+        });
+    };
+
+    handleOptionTwoTextChange = (e) => {
+        const text = e.target.value;
+
+        this.setState({
+            optionTwoText: text
+        });
+    };
+
+    handleSubmit = (e) => {
+        e.preventDefault();
+
+        const {optionOneText, optionTwoText} = this.state;
+        const {dispatch} = this.props;
+
+        this.setState({
+            hasSubmitted: true
+        });
+
+        dispatch(handleAddQuestion(optionOneText, optionTwoText, () => {
+            this.setState({
+                optionOneText: '',
+                optionTwoText: '',
+                toDashboard: true
+            });
+        }));
+    };
+
+    render() {
+        const {
+            optionOneText,
+            optionTwoText,
+            toDashboard,
+            hasSubmitted
+        } = this.state;
+
+        if (toDashboard === true) {
+            return <Redirect to='/'/>;
+        }
+
+        return (
+            <div>
+                <div className='projectContainer'>
+                    <div className='container'>
+                        <div className='row justify-content-center'>
+                            <div className='col-sm-8'>
+                                <div className='card'>
+                                    <div className='card-header bold'>Create New Question</div>
+                                    <div className='card-body'>
+                                        <div className='container'>
+                                            <div className='row justify-content-center p-20-top-bottom'>
+                                                <div className='col-sm-12'>
+                                                    <p><strong>Would You Rather...?</strong></p>
+                                                    <form onSubmit={this.handleSubmit}>
+                                                        <div className='form-group'>
+                                                            <input
+                                                                className='form-control'
+                                                                placeholder='Enter option one text here...'
+                                                                value={optionOneText}
+                                                                onChange={this.handleOptionOneTextChange}
+                                                            />
+                                                        </div>
+                                                        <div className='form-group'>
+                                                            <input
+                                                                className='form-control'
+                                                                placeholder='Enter option two text here...'
+                                                                value={optionTwoText}
+                                                                onChange={this.handleOptionTwoTextChange}
+                                                            />
+                                                        </div>
+                                                        <input type='submit'
+                                                               name='submit'
+                                                               id='submit'
+                                                               value={hasSubmitted ? "Submitting Question..." : "Submit"}
+                                                               className='btn btn-outline-primary'
+                                                               disabled={
+                                                                   optionOneText === '' ||
+                                                                   optionTwoText === '' ||
+                                                                   hasSubmitted
+                                                               } />
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
     }
-    this.handleChangeOptionOne = this.handleChangeOptionOne.bind(this)
-    this.handleChangeOptionTwo  = this.handleChangeOptionTwo.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-  }
-  
-  handleChangeOptionOne = (e) => {
-    const optionOne = e.target.value
-
-    this.setState({ optionOne: optionOne });
-  }
-
-  handleChangeOptionTwo = (e) => {
-    const optionTwo = e.target.value
-
-    this.setState({ optionTwo: optionTwo });
-  }
-
-  handleSubmit = (e) => {
-    e.preventDefault();
-
-    const { optionOne, optionTwo } = this.state
-    const { dispatch } = this.props
-
-    dispatch(addQuestion(optionOne, optionTwo));
-    this.setState({ userID: true });
-    this.setState({ redirectToNewPage: true });
-  }
-
-  render() {
-    const { authedUser, authedUserAvatar, authedUserID } = this.props
-    const { optionOne, optionTwo, redirectToNewPage } = this.state
-
-    if (redirectToNewPage) {
-      return (
-        <Redirect to={"/home/" + authedUserID}/>
-      )
-    }
-
-    if (authedUser === null) {
-      return <Redirect to='/' />
-    }
-
-    return(
-      <Fragment>
-        <Nav avatar={authedUserAvatar}/>
-        <div className="new-question-full-div">
-          <h2 className='complete-question-title'>Create New Question</h2>
-          <form className='new-question-body' onSubmit={this.handleSubmit}>
-            <h1 className='title'> Would you rather... </h1>
-            <input 
-              placeholder='Enter Option One Here' 
-              value={optionOne}
-              className='question-option' 
-              onChange={this.handleChangeOptionOne}
-              />
-            <h3 className='complete-question-title'> or </h3>
-            <input 
-              placeholder='Enter Option Two Here' 
-              value={optionTwo}
-              className='question-option' 
-              onChange={this.handleChangeOptionTwo}
-              />
-            <input type='submit' className='submit-btn'/>
-          </form>
-        </div>
-      </Fragment>
-    )
-  }
 }
 
-function mapStateToProps ({ authedUser }) {
-  let authedUserAvatar = ''
-  let authedUserID = ''
-
-  if (authedUser !== null) {
-    authedUserAvatar = authedUser.avatarURL;
-    authedUserID = authedUser.id
-  }
-
-  return {
-    authedUser: authedUser,
-    authedUserAvatar: authedUserAvatar,
-    authedUserID: authedUserID
-  }
-}
-
-export default connect(mapStateToProps)(NewQuestion)
+export default connect()(NewQuestion);

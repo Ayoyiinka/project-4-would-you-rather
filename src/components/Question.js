@@ -1,71 +1,69 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import { savingQuestionAnswer } from '../actions/questions'
-import '../css/Question.css'
+import React from 'react';
+import {connect} from 'react-redux';
+import {formatQuestion} from "../utils/helpers";
+import {Link} from 'react-router-dom';
 
-class Question extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      answer: ''
+const Question = (props) => {
+    const {question} = props;
+
+    if (question === null) {
+        return <p>This question doesn't exist.</p>
     }
-    this.handleChange = this.handleChange.bind(this)
-    this.handleSubmit = this.handleSubmit.bind(this)
-  }
 
-  handleChange = (e) => {
-    const answer = e.target.value
+    const {name, id, avatar, optionOne, optionTwo, hasVoted} = question;
 
-    this.setState({ answer: answer })
-  }
-  
-  handleSubmit = (e) => {
-    e.preventDefault();
-
-    const { answer } = this.state
-    const { dispatch, questionID } = this.props
-    
-    if (!answer) {
-      alert('Please select an answer.')
-    } else {
-      dispatch(savingQuestionAnswer(questionID, answer))
+    if (props.questionsToShow === 'answered' && hasVoted !== true) {
+        return false;
+    } else if (props.questionsToShow === 'unanswered' && hasVoted === true) {
+        return false;
     }
-  }
 
-  render() {
-    const { users, authedUser } = this.props
+    let viewPollLink = '';
 
-    return(
-      <div className="question-full-div">
-        <div>
-          <img className="question-avatar" alt="user-avatar" src={Object.values(users)[2]} /> 
+    if (props.questionsToShow === 'answered') {
+        viewPollLink = `/question/${id}/results`;
+    } else if (props.questionsToShow === 'unanswered') {
+        viewPollLink = `/question/${id}`;
+    }
+
+    return (
+        <div className='margin-top-10'>
+            <div className='card'>
+                <div className='card-header bold'>{name} asks would you rather...</div>
+                <div className='card-body'>
+                    <div className='container'>
+                        <div className='row justify-content-center'>
+                            <div className='col-sm-4 border-right center'>
+                                <img src={avatar} alt={`Avatar of ${name}`} className='avatar'/>
+                            </div>
+                            <div className='col-sm-8'>
+                                <div className='question-info'>
+                                    <p className='center'>{optionOne.text} <strong>OR</strong> {optionTwo.text}</p>
+                                    <Link to={viewPollLink} className='center'>
+                                        <button
+                                            className='btn btn-outline-primary reset-vertical-margin '>
+                                            View Poll
+                                        </button>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <form className="question-form" onSubmit={this.handleSubmit}>
-          {authedUser.id === this.props.author
-            ? <div className="question-title">You asked:</div>
-            : <div className="question-title">{this.props.author} asks:</div>}
-          <h3> Would you rather... </h3>
-          <input type='radio' name='option' value='optionOne' id='optionOne' onChange={this.handleChange}/>
-          <label className="question-choice" htmlFor='optionOne'> {this.props.optionOne} </label>
-          <br />
-          <input type='radio' name='option' value='optionTwo' id='optionTwo' onChange={this.handleChange}/> 
-          <label className="question-choice" htmlFor='optionTwo'>{this.props.optionTwo}</label>
-          <br />
-          <input className="question-button" type='submit' />
-        </form>  
-        <div className="clearfix"></div>
-    </div>
     )
-  }
+};
+
+
+function mapStateToProps({login, users, questions}, {id, questionsToShow}) {
+    const question = questions[id];
+
+    return {
+        authedUser: login.loggedInUser.id,
+        question: formatQuestion(question, users[question.author], login.loggedInUser.id),
+        questionsToShow
+    }
 }
 
-function mapStateToProps ({ users, authedUser }, { userID }) {
-  const user = users[userID];
-
-  return {
-    users: user,
-    authedUser: authedUser
-  }
-}
-
-export default connect(mapStateToProps)(Question)
+export default connect(mapStateToProps)(Question);

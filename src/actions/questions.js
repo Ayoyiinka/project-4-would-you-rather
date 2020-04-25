@@ -1,69 +1,40 @@
-import { _getQuestions } from '../utils/_DATA';
-import { handleQuestionAnswer, handleSaveQuestion } from '../utils/api'
+import {getQuestions} from '../utils/api';
+import {showLoading, hideLoading} from 'react-redux-loading';
 
-export const GET_QUESTIONS = 'GET_QUESTIONS'
-export const SAVE_QUESTION = 'SAVE_QUESTION'
-export const SAVE_QUESTION_ANSWER = 'SAVE_QUESTION_ANSWER'
+export const RECEIVE_QUESTIONS = 'RECEIVE_QUESTIONS';
+export const ADD_QUESTION = 'ADD_QUESTION';
+export const ADD_QUESTION_ANSWER = 'ADD_QUESTION_ANSWER';
 
-//GETS ALL QUESTIONS
-function getQuestions (questions) {
-  return {
-    type: GET_QUESTIONS,
-    questions
-  }
+export function receiveQuestions(questions) {
+    return {
+        type: RECEIVE_QUESTIONS,
+        questions
+    }
 }
 
-export const loadingQuestions = () => {
-  return dispatch => {
-    return _getQuestions().then(response => dispatch(getQuestions(response)))
-  }
+export function addQuestion(question) {
+    return {
+        type: ADD_QUESTION,
+        question
+    }
 }
 
-//SAVE NEW QUESTION
-export function saveQuestion (question) {
-  return {
-    type: SAVE_QUESTION,
-    question
-  }
+export function addQuestionAnswer(authedUser, questionId, selectedOption) {
+    return {
+        type: ADD_QUESTION_ANSWER,
+        authedUser,
+        questionId,
+        selectedOption
+    }
 }
 
-//SAVES QUESTION ANSWER OF PARTICULAR USER
-function saveQuestionAnswer ({ authedUser, qid, answer}) {
-  return {
-    type: SAVE_QUESTION_ANSWER,
-    authedUser,
-    qid,
-    answer
-  }
-}
-
-export const savingQuestionAnswer = (qid, answer) => {
-  return (dispatch, getState) => {
-    let { authedUser } = getState()
-
-    authedUser = Object.values(authedUser)[0]
-
-    dispatch(saveQuestionAnswer({ authedUser, qid, answer }))
-
-    return handleQuestionAnswer({
-      authedUser,
-      qid,
-      answer
-    })
-  }
-}
-
-export const addQuestion = (optionOne, optionTwo) => {
-  return (dispatch, getState) => {
-    let { authedUser } = getState()
-
-    authedUser = Object.values(authedUser)[0]
-
-    return handleSaveQuestion({
-      optionOneText: optionOne,
-      optionTwoText: optionTwo,
-      author: authedUser
-    })
-      .then((question) => dispatch(saveQuestion(question)))
-  }
+export function handleGetQuestions() {
+    return (dispatch) => {
+        dispatch(showLoading());
+        return getQuestions()
+            .then((questions) => {
+                dispatch(receiveQuestions(questions));
+                dispatch(hideLoading());
+            });
+    }
 }
